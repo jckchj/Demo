@@ -1,0 +1,53 @@
+﻿<Window x:Class="AzureAIDemo.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:AzureAIDemo"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1000" Top="20" Left="30">
+    <Window.Resources>
+        <local:SampleBindingConverter x:Key="SampleListConverter"></local:SampleBindingConverter>
+    </Window.Resources>
+    <Grid HorizontalAlignment="Stretch" Margin="0,0,0,0" VerticalAlignment="Stretch">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="80"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Background="#00b294">
+            <TextBlock x:Name="SampleNameLabel" Text="Azure Cloud AI Demo" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5, 0, 0, 0" FontSize="26"/>
+        </DockPanel>
+        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.RowSpan="2" Grid.Column="0">
+            <StackPanel.Background>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+            </StackPanel.Background>
+            <Button x:Name="ManageSubscriptionKey" Padding="5" HorizontalAlignment="Left" BorderBrush="{x:Null}" Background="{x:Null}" Click="ManageSubscriptionKey_Click">Subscription Key Management</Button>
+            <Label>Select a scenario:</Label>
+            <ListBox x:Name="_sampleListBox" ScrollViewer.HorizontalScrollBarVisibility="Disabled" BorderThickness="0" Margin="10, 5, 5, 5" SelectionChanged="_sampleListBox_SelectionChanged">
+                <ListBox.Background>
+                    <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>
+                </ListBox.Background>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock TextWrapping="Wrap" Margin="0, 5, 0, 5" Text="{Binding Converter={StaticResource SampleListConverter}}"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+        <Frame x:Name="_sampleFrame" Grid.Row="1" Grid.Column="1" NavigationUIVisibility="Hidden" FontWeight="Bold" FontSize="18.667" Padding="0, 5, 0, 5"></Frame>
+        <TextBox x:Name="_logTextBox" Grid.Row="2" Grid.Column="1" Padding="5" VerticalScrollBarVisibility="Auto" TextWrapping="Wrap" IsReadOnly="True">
+            <TextBox.Background>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlLightColorKey}}"/>
+            </TextBox.Background> Status text goes here
+        </TextBox>
+        <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}">
+            <TextBlock x:Name="_disclaimerTextBlock" VerticalAlignment="Center" HorizontalAlignment="Left" TextWrapping="Wrap" Margin="5">This is demo for Azure Cloud AI.</TextBlock>
+        </StackPanel>
+    </Grid>
+</Window>

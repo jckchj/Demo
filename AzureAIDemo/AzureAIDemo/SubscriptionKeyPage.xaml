@@ -1,0 +1,61 @@
+﻿<Page x:Class="AzureAIDemo.SubscriptionKeyPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:AzureAIDemo"
+      mc:Ignorable="d" 
+      d:DesignHeight="300" d:DesignWidth="600"
+      Title="SubscriptionKeyPage">
+
+    <Page.Resources>
+        <Style x:Key="LinkButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock TextDecorations="Underline">
+                            <ContentPresenter/>
+                        </TextBlock>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="Blue" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="true">
+                    <Setter Property="Foreground" Value="Red" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Page.Resources>
+    <Grid>
+        <StackPanel Orientation="Vertical">
+            <TextBlock Margin="5, 0, 5, 0" >To use the service, you need to ensure that you have right subscription key.</TextBlock>
+            <TextBlock Margin="5, 0, 5, 0" >Please note that each service (Face, Emotion, Speech, etc) has its own subscription key.</TextBlock>
+            <TextBlock Margin="5, 0, 5, 0" ></TextBlock>
+            <Grid Height="162"  Margin="5,0,20,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150*"/>
+                    <ColumnDefinition Width="212*"/>
+                    <ColumnDefinition Width="213*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="1*"/>
+                </Grid.RowDefinitions>
+                <Label VerticalAlignment="Center" Margin="0,2.6" Height="26" Content="Computer Vision API Key:"/>
+                <TextBox VerticalAlignment="Stretch" Grid.Column="1"  Padding="2" Text="{Binding ComputerVisionKey, Mode=TwoWay}" Margin="0,5,0,5" Grid.ColumnSpan="2"/>
+                <Label VerticalAlignment="Top" Grid.Row="1" Content="Endpoint:" Margin="0,2.6,0,0" Height="26"/>
+                <TextBox VerticalAlignment="Stretch" Grid.Row="1"  Grid.Column="1" Padding="2" Text="{Binding ComputerVisionEndpoint, Mode=TwoWay}" Margin="0,5,0,5" Grid.ColumnSpan="2"/>
+                <Label VerticalAlignment="Center" Grid.Row="2" Margin="0,2.6" Height="26" Content="Face API Key:"/>
+                <TextBox VerticalAlignment="Stretch" Grid.Row="2" Grid.Column="1"  Padding="2" Text="{Binding FaceKey, Mode=TwoWay}" Margin="0,5,0,5" Grid.ColumnSpan="2"/>
+                <Label VerticalAlignment="Top" Grid.Row="3" Content="Endpoint:" Margin="0,2.6,0,0" Height="26"/>
+                <TextBox VerticalAlignment="Stretch" Grid.Row="3"  Grid.Column="1" Padding="2" Text="{Binding FaceEndpoint, Mode=TwoWay}" Margin="0,5,0,5" Grid.ColumnSpan="2"/>
+                <Button Click="SaveSetting_Click" Grid.Row="4" Margin="78,4,73,3" Padding="5, 0, 5, 0" VerticalAlignment="Center" Height="18" Content="Save Setting" Grid.Column="1" />
+                <Button Click="DeleteSetting_Click" Grid.Row="4" Margin="75,4,76,3" Padding="5, 0, 5, 0" VerticalAlignment="Center" Height="18" Content="Delete Setting" Grid.Column="2" />
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Page>
