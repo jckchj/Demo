@@ -1,4 +1,6 @@
+!.gitignore
 *.pdb
 .vs
-obj
-bin
+obj/
+bin/
+!/bin/
