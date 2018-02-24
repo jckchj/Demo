@@ -108,8 +108,15 @@ namespace AzureAIDemo.Extensions.UI
                 {
                     ClearLog();
                     _status.Text = "Start demo action " + action.Title +  "...";
-                    string resp = await action.Act(_imageInput.Text);
-                    Log(resp);
+                    try
+                    {
+                        string resp = await action.Act(_imageInput.Text);
+                        Log(resp);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(ex.StackTrace);
+                    }
                     _status.Text = "End demo action " + action.Title;
                 }
             }
