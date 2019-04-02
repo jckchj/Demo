@@ -1,8 +1,7 @@
 '''
-$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=0
-$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=1
-$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=0
-# python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=1
+$ python dist_trainer.py --ps_hosts=localhost:2222 --worker_hosts=localhost:2223,localhost:2224 --job_name=ps --task_index=0
+$ python dist_trainer.py --ps_hosts=localhost:2222 --worker_hosts=localhost:2223,localhost:2224 --job_name=worker --task_index=0
+$ python dist_trainer.py --ps_hosts=localhost:2222 --worker_hosts=localhost:2223,localhost:2224 --job_name=worker --task_index=1 --serving_mode=true
 '''
 
 import argparse
@@ -31,23 +30,6 @@ def main(_):
     w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
     b1 = tf.Variable(tf.random_normal([1024]))
     b2 = tf.Variable(tf.random_normal([625]))
-
-  if FLAGS.serving_mode:
-    print("********************Excute predict***************")
-    print("*************************************************")
-    p_X = tf.placeholder(tf.float32, [None, 784])
-    p_Y = tf.placeholder(tf.float32, [None, 10])
-    p_h = tf.nn.relu(tf.matmul(p_X, w_h) + b1)
-    p_h2 = tf.nn.relu(tf.matmul(p_h, w_h2) + b2)
-    p_py_x = tf.matmul(p_h2, w_o)
-    p_predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(p_py_x, 1), tf.argmax(p_Y, 1)), tf.float32))
-    p_mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-    while True:
-      with tf.Session() as sess:
-        acc = sess.run([p_predict_acc], feed_dict={p_Y: p_mnist.test.images, p_Y: p_mnist.test.labels})
-        print("Test Accuracy: {}".format(acc))
-        time.sleep(5)
-    exit()
 	
   if FLAGS.job_name == "ps":
     server.join()
@@ -80,19 +62,28 @@ def main(_):
     # restoring from a checkpoint, saving to a checkpoint, and closing when done
     # or an error occurs.
     with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), hooks=hooks) as mon_sess:
-      #mon_sess.run(tf.global_variables_initializer())
-      step = 0 if (FLAGS.task_index == 0) else 1
-      batch_size = 1000	  
-      while not mon_sess.should_stop():
-        # Run a training step asynchronously.
-        # See `tf.train.SyncReplicasOptimizer` for additional details on how to
-        # perform *synchronous* training.
-        # mon_sess.run handles AbortedError in case of preempted PS.
-        step += 2
-        batch_x, batch_y = mnist.train.next_batch(batch_size)
-        mon_sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
-        loss, acc = mon_sess.run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
-        print("Epoch: {}".format(step/2), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
+      if FLAGS.serving_mode:
+        print("********************Excute predict***************")
+        print("*************************************************")
+        while True:
+          acc = mon_sess.run([predict_acc], feed_dict={X: mnist.test.images, Y: mnist.test.labels})
+          print("Test Accuracy: {}".format(acc))
+          time.sleep(5)
+		  
+      else:
+        #mon_sess.run(tf.global_variables_initializer())
+        step = 0 if (FLAGS.task_index == 0) else 1
+        batch_size = 1000	  
+        while not mon_sess.should_stop():
+          # Run a training step asynchronously.
+          # See `tf.train.SyncReplicasOptimizer` for additional details on how to
+          # perform *synchronous* training.
+          # mon_sess.run handles AbortedError in case of preempted PS.
+          step += 2
+          batch_x, batch_y = mnist.train.next_batch(batch_size)
+          mon_sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+          loss, acc = mon_sess.run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
+          print("Epoch: {}".format(step/2), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
 
 
 if __name__ == "__main__":
