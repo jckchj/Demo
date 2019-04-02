@@ -22,7 +22,7 @@ def main(_):
     b1 = tf.Variable(tf.random_normal([1024]))
     b2 = tf.Variable(tf.random_normal([625]))
 
-  if FLAGS.serve-mode:
+  if FLAGS.serving_mode:
     print("Excute predict")
     h = tf.nn.relu(tf.matmul(X, w_h) + b1)
     h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
@@ -118,7 +118,7 @@ if __name__ == "__main__":
       help="Index of task within the job"
   )
   parser.add_argument(
-      "--serve-mode",
+      "--serving_mode",
       type=str,
       default="false",
       help="Index of task within the job"
