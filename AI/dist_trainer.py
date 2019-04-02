@@ -26,7 +26,7 @@ def main(_):
     print("Excute predict")
     p_X = tf.placeholder(tf.float32, [None, 784])
     p_Y = tf.placeholder(tf.float32, [None, 10])
-    p_h = tf.nn.relu(tf.matmul(X, w_h) + b1)
+    p_h = tf.nn.relu(tf.matmul(p_X, w_h) + b1)
     p_h2 = tf.nn.relu(tf.matmul(p_h, w_h2) + b2)
     p_py_x = tf.matmul(p_h2, w_o)
     p_predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(p_py_x, 1), tf.argmax(Y, 1)), tf.float32))
