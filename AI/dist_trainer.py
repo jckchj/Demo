@@ -11,11 +11,6 @@ import sys
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-X = tf.placeholder(tf.float32, [None, 784])
-Y = tf.placeholder(tf.float32, [None, 10])
-
 FLAGS = None
 epoch_count = 1000
 
@@ -33,14 +28,12 @@ def main(_):
     w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
     w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
     w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
-
-  with tf.device("/job:ps/task:1"):    
     b1 = tf.Variable(tf.random_normal([1024]))
     b2 = tf.Variable(tf.random_normal([625]))
-    X = tf.placeholder(tf.float32, [None, 784])
-    Y = tf.placeholder(tf.float32, [None, 10])
 	
   with tf.device("/job:worker/task:0"):
+    X = tf.placeholder(tf.float32, [None, 784])
+    Y = tf.placeholder(tf.float32, [None, 10])
     h = tf.nn.relu(tf.matmul(X, w_h) + b1)
     h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
     py_x = tf.matmul(h2, w_o)
@@ -48,6 +41,11 @@ def main(_):
   if FLAGS.job_name == "ps":
     server.join()
   elif FLAGS.job_name == "worker":
+
+    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+
+    X = tf.placeholder(tf.float32, [None, 784])
+    Y = tf.placeholder(tf.float32, [None, 10])
 
     # Assigns ops to the local worker by default.
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index, cluster=cluster)):
@@ -66,7 +64,7 @@ def main(_):
     # The MonitoredTrainingSession takes care of session initialization,
     # restoring from a checkpoint, saving to a checkpoint, and closing when done
     # or an error occurs.
-    with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), checkpoint_dir="/tmp/train_logs", hooks=hooks) as mon_sess:
+    with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), hooks=hooks) as mon_sess:
       step = 0 if (FLAGS.task_index == 0) else 1
       batch_size = 1000	  
       while not mon_sess.should_stop():
@@ -76,7 +74,7 @@ def main(_):
         # mon_sess.run handles AbortedError in case of preempted PS.
         step += 1
         batch_x, batch_y = mnist.train.next_batch(batch_size)
-        loss, acc = run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
+        loss, acc = mon_sess.run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
         print("Epoch: {}".format(step), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
 
 
