@@ -122,8 +122,8 @@ if __name__ == "__main__":
   )
   parser.add_argument(
       "--serving_mode",
-      type=str,
-      default="false",
+      type=bool,
+      default=False,
       help="Index of task within the job"
   )
   FLAGS, unparsed = parser.parse_known_args()
