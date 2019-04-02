@@ -16,7 +16,6 @@ FLAGS = None
 epoch_count = 1000
 
 def main(_):
-
   # Create a cluster from the parameter server and worker hosts.
   cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
 
