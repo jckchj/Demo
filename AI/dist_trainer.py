@@ -58,7 +58,7 @@ def main(_):
       global_step = tf.contrib.framework.get_or_create_global_step()
 
       train_op = tf.train.AdagradOptimizer(0.01).minimize(loss, global_step=global_step)
-	  predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(py_x, 1), tf.argmax(Y, 1)), tf.float32))
+      predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(py_x, 1), tf.argmax(Y, 1)), tf.float32))
 
     # The StopAtStepHook handles stopping after running given steps.
     hooks=[tf.train.StopAtStepHook(last_step=1000000)]
