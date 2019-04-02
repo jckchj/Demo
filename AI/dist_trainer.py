@@ -74,7 +74,7 @@ def main(_):
         # mon_sess.run handles AbortedError in case of preempted PS.
         step += 1
         batch_x, batch_y = mnist.train.next_batch(batch_size)
-		sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
+        sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
         loss, acc = mon_sess.run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
         print("Epoch: {}".format(step), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
 
