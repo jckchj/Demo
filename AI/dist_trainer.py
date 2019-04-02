@@ -27,6 +27,8 @@ def main(_):
   with tf.device("/job:ps/task:0"):
     X = tf.placeholder(tf.float32, [None, 784])
     Y = tf.placeholder(tf.float32, [None, 10])
+    X = tf.placeholder(tf.float32, [None, 784])
+    Y = tf.placeholder(tf.float32, [None, 10])
     w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
     w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
     w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
@@ -34,8 +36,6 @@ def main(_):
     b2 = tf.Variable(tf.random_normal([625]))
 	
   with tf.device("/job:worker/task:0"):
-    X = tf.placeholder(tf.float32, [None, 784])
-    Y = tf.placeholder(tf.float32, [None, 10])
     h = tf.nn.relu(tf.matmul(X, w_h) + b1)
     h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
     py_x = tf.matmul(h2, w_o)
@@ -49,8 +49,6 @@ def main(_):
 	
     # Assigns ops to the local worker by default.
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index, cluster=cluster)):
-	
-
       # Build model...
       cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y))
       global_step = tf.contrib.framework.get_or_create_global_step()
@@ -76,7 +74,7 @@ def main(_):
         batch_x, batch_y = mnist.train.next_batch(batch_size)
         mon_sess.run(train_op, feed_dict={X: batch_x, Y: batch_y})
         loss, acc = mon_sess.run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
-        print("Epoch: {}".format(step), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
+        print("Epoch: {}".format(step/2), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
 
 
 if __name__ == "__main__":
