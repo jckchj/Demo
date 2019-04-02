@@ -7,6 +7,7 @@ $ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts
 
 import argparse
 import sys
+import time
 
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
@@ -23,7 +24,8 @@ def main(_):
     b2 = tf.Variable(tf.random_normal([625]))
 
   if FLAGS.serving_mode:
-    print("Excute predict")
+    print("********************Excute predict***************")
+    print("*************************************************")
     p_X = tf.placeholder(tf.float32, [None, 784])
     p_Y = tf.placeholder(tf.float32, [None, 10])
     p_h = tf.nn.relu(tf.matmul(p_X, w_h) + b1)
@@ -31,10 +33,13 @@ def main(_):
     p_py_x = tf.matmul(p_h2, w_o)
     p_predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(p_py_x, 1), tf.argmax(p_Y, 1)), tf.float32))
     p_mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+	while True:
+      with tf.Session() as sess:
+        acc = mon_sess.run([cost, predict_acc], feed_dict={p_Y: mnist.test.images, p_Y: mnist.test.lables})
+        print("Test Accuracy: {}".format(acc))
+        time.sleep(5)
     exit()
 
-	
-	
   ps_hosts = FLAGS.ps_hosts.split(",")
   worker_hosts = FLAGS.worker_hosts.split(",")
 
