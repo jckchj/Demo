@@ -62,7 +62,7 @@ def main(_):
     # The MonitoredTrainingSession takes care of session initialization,
     # restoring from a checkpoint, saving to a checkpoint, and closing when done
     # or an error occurs.
-    with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), checkpoint_dir="/tmp/train_logs", hooks=hooks) as mon_sess:
+    with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), hooks=hooks) as mon_sess:
       mon_sess.run(tf.global_variables_initializer())
       step = 0 if (FLAGS.task_index == 0) else 1
       batch_size = 1000	  
