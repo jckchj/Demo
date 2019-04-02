@@ -16,6 +16,8 @@ FLAGS = None
 epoch_count = 1000
 
 def main(_):
+  ps_hosts = FLAGS.ps_hosts.split(",")
+  worker_hosts = FLAGS.worker_hosts.split(",")
   # Create a cluster from the parameter server and worker hosts.
   cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
 
@@ -42,10 +44,6 @@ def main(_):
         print("Test Accuracy: {}".format(acc))
         time.sleep(5)
     exit()
-
-  ps_hosts = FLAGS.ps_hosts.split(",")
-  worker_hosts = FLAGS.worker_hosts.split(",")
-
 
   # Create and start a server for the local task.
   server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
