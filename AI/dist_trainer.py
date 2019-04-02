@@ -29,7 +29,7 @@ def main(_):
     p_h = tf.nn.relu(tf.matmul(p_X, w_h) + b1)
     p_h2 = tf.nn.relu(tf.matmul(p_h, w_h2) + b2)
     p_py_x = tf.matmul(p_h2, w_o)
-    p_predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(p_py_x, 1), tf.argmax(Y, 1)), tf.float32))
+    p_predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(p_py_x, 1), tf.argmax(p_Y, 1)), tf.float32))
     p_mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
     exit()
 
