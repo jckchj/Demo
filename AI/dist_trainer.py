@@ -16,6 +16,10 @@ FLAGS = None
 epoch_count = 1000
 
 def main(_):
+
+  # Create a cluster from the parameter server and worker hosts.
+  cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
+
   with tf.device("/job:ps/task:0"):
     w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
     w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
@@ -43,8 +47,6 @@ def main(_):
   ps_hosts = FLAGS.ps_hosts.split(",")
   worker_hosts = FLAGS.worker_hosts.split(",")
 
-  # Create a cluster from the parameter server and worker hosts.
-  cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
 
   # Create and start a server for the local task.
   server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
