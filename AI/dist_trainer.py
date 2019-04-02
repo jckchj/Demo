@@ -35,7 +35,7 @@ def main(_):
     w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
 
   with tf.device("/job:ps/task:1"):    
-	b1 = tf.Variable(tf.random_normal([1024]))
+    b1 = tf.Variable(tf.random_normal([1024]))
     b2 = tf.Variable(tf.random_normal([625]))
     X = tf.placeholder(tf.float32, [None, 784])
     Y = tf.placeholder(tf.float32, [None, 10])
