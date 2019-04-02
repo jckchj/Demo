@@ -35,7 +35,7 @@ def main(_):
     p_mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
     while True:
       with tf.Session() as sess:
-        acc = mon_sess.run([cost, predict_acc], feed_dict={p_Y: mnist.test.images, p_Y: mnist.test.lables})
+        acc = sess.run([cost, predict_acc], feed_dict={p_Y: mnist.test.images, p_Y: mnist.test.lables})
         print("Test Accuracy: {}".format(acc))
         time.sleep(5)
     exit()
