@@ -1,8 +1,8 @@
 '''
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=0
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=1
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=0
-# python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=1
+$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=0
+$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=1
+$ python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=0
+# python dist_trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=1
 '''
 
 import argparse
