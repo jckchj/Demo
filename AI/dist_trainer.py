@@ -28,10 +28,7 @@ def main(_):
     h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
     py_x = tf.matmul(h2, w_o)
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-	
-	
-	
-	exit()
+    exit()
 
 	
 	
