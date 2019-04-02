@@ -15,6 +15,26 @@ FLAGS = None
 epoch_count = 1000
 
 def main(_):
+  with tf.device("/job:ps/task:0"):
+    w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
+    w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
+    w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
+    b1 = tf.Variable(tf.random_normal([1024]))
+    b2 = tf.Variable(tf.random_normal([625]))
+
+  if FLAGS.serve-mode:
+    print("Excute predict")
+    h = tf.nn.relu(tf.matmul(X, w_h) + b1)
+    h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
+    py_x = tf.matmul(h2, w_o)
+    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+	
+	
+	
+	exit()
+
+	
+	
   ps_hosts = FLAGS.ps_hosts.split(",")
   worker_hosts = FLAGS.worker_hosts.split(",")
 
@@ -23,29 +43,19 @@ def main(_):
 
   # Create and start a server for the local task.
   server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
-
-  with tf.device("/job:ps/task:0"):
-    X = tf.placeholder(tf.float32, [None, 784])
-    Y = tf.placeholder(tf.float32, [None, 10])
-    X = tf.placeholder(tf.float32, [None, 784])
-    Y = tf.placeholder(tf.float32, [None, 10])
-    w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
-    w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
-    w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
-    b1 = tf.Variable(tf.random_normal([1024]))
-    b2 = tf.Variable(tf.random_normal([625]))
-	
-  with tf.device("/job:worker/task:0"):
-    h = tf.nn.relu(tf.matmul(X, w_h) + b1)
-    h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
-    py_x = tf.matmul(h2, w_o)
+  
 	
   if FLAGS.job_name == "ps":
     server.join()
 
   elif FLAGS.job_name == "worker":
 
-    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+    with tf.device("/job:worker/task:%d" % FLAGS.task_index):
+      X = tf.placeholder(tf.float32, [None, 784])
+      Y = tf.placeholder(tf.float32, [None, 10])
+      h = tf.nn.relu(tf.matmul(X, w_h) + b1)
+      h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
+      py_x = tf.matmul(h2, w_o)
 	
     # Assigns ops to the local worker by default.
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index, cluster=cluster)):
@@ -55,6 +65,9 @@ def main(_):
 
       train_op = tf.train.AdagradOptimizer(0.01).minimize(cost, global_step=global_step)
       predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(py_x, 1), tf.argmax(Y, 1)), tf.float32))
+
+    # read data
+    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
     # The StopAtStepHook handles stopping after running given steps.
     hooks=[tf.train.StopAtStepHook(last_step=1000000)]
@@ -105,6 +118,12 @@ if __name__ == "__main__":
       "--task_index",
       type=int,
       default=0,
+      help="Index of task within the job"
+  )
+  parser.add_argument(
+      "--serve-mode",
+      type=str,
+      default="false",
       help="Index of task within the job"
   )
   FLAGS, unparsed = parser.parse_known_args()
