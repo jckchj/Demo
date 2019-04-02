@@ -1,16 +1,23 @@
 '''
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2222 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=0
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2222 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=1
-$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2222 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=0
-# python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2222 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=1
+$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=0
+$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=ps --task_index=1
+$ python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=0
+# python trainer.py --ps_hosts=stcvl-240:2222,stcvl-240:2223 --worker_hosts=stcvl-241:2222,stcvl-241:2223 --job_name=worker --task_index=1
 '''
 
 import argparse
 import sys
 
 import tensorflow as tf
+from tensorflow.examples.tutorials.mnist import input_data
+
+mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
+
+X = tf.placeholder(tf.float32, [None, 784])
+Y = tf.placeholder(tf.float32, [None, 10])
 
 FLAGS = None
+epoch_count = 1000
 
 def main(_):
   ps_hosts = FLAGS.ps_hosts.split(",")
@@ -20,22 +27,38 @@ def main(_):
   cluster = tf.train.ClusterSpec({"ps": ps_hosts, "worker": worker_hosts})
 
   # Create and start a server for the local task.
-  server = tf.train.Server(cluster,
-                           job_name=FLAGS.job_name,
-                           task_index=FLAGS.task_index)
+  server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
+  with tf.device("/job:ps/task:0"):
+    w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
+    w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
+    w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
+
+  with tf.device("/job:ps/task:1"):    
+	b1 = tf.Variable(tf.random_normal([1024]))
+    b2 = tf.Variable(tf.random_normal([625]))
+    X = tf.placeholder(tf.float32, [None, 784])
+    Y = tf.placeholder(tf.float32, [None, 10])
+	
+  with tf.device("/job:worker/task:0"):
+    h = tf.nn.relu(tf.matmul(X, w_h) + b1)
+    h2 = tf.nn.relu(tf.matmul(h, w_h2) + b2)
+    py_x = tf.matmul(h2, w_o)
+	
   if FLAGS.job_name == "ps":
     server.join()
   elif FLAGS.job_name == "worker":
 
     # Assigns ops to the local worker by default.
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index, cluster=cluster)):
+	
 
       # Build model...
-      loss = ...
+      loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y))
       global_step = tf.contrib.framework.get_or_create_global_step()
 
       train_op = tf.train.AdagradOptimizer(0.01).minimize(loss, global_step=global_step)
+	  predict_acc = tf.reduce_mean(tf.cast(tf.equal(tf.argmax(py_x, 1), tf.argmax(Y, 1)), tf.float32))
 
     # The StopAtStepHook handles stopping after running given steps.
     hooks=[tf.train.StopAtStepHook(last_step=1000000)]
@@ -44,12 +67,16 @@ def main(_):
     # restoring from a checkpoint, saving to a checkpoint, and closing when done
     # or an error occurs.
     with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), checkpoint_dir="/tmp/train_logs", hooks=hooks) as mon_sess:
+      step = 0        
       while not mon_sess.should_stop():
         # Run a training step asynchronously.
         # See `tf.train.SyncReplicasOptimizer` for additional details on how to
         # perform *synchronous* training.
         # mon_sess.run handles AbortedError in case of preempted PS.
-        mon_sess.run(train_op)
+        step += 1
+        batch_x, batch_y = mnist.train.next_batch(batch_size)
+        loss, acc = run([cost, predict_acc], feed_dict={X: batch_x, Y: batch_y})
+        print("Epoch: {}".format(step), "\tLoss: {:.6f}".format(loss), "\tTraining Accuracy: {:.5f}".format(acc))
 
 
 if __name__ == "__main__":
