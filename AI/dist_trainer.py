@@ -63,7 +63,7 @@ def main(_):
     # restoring from a checkpoint, saving to a checkpoint, and closing when done
     # or an error occurs.
     with tf.train.MonitoredTrainingSession(master=server.target, is_chief=(FLAGS.task_index == 0), hooks=hooks) as mon_sess:
-      mon_sess.run(tf.global_variables_initializer())
+      #mon_sess.run(tf.global_variables_initializer())
       step = 0 if (FLAGS.task_index == 0) else 1
       batch_size = 1000	  
       while not mon_sess.should_stop():
