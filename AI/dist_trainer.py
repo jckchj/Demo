@@ -25,6 +25,8 @@ def main(_):
   server = tf.train.Server(cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
 
   with tf.device("/job:ps/task:0"):
+    X = tf.placeholder(tf.float32, [None, 784])
+    Y = tf.placeholder(tf.float32, [None, 10])
     w_h = tf.Variable(tf.random_normal([784, 1024], stddev=0.01))
     w_h2 = tf.Variable(tf.random_normal([1024, 625], stddev=0.01))
     w_o = tf.Variable(tf.random_normal([625, 10], stddev=0.01))
@@ -40,13 +42,11 @@ def main(_):
 	
   if FLAGS.job_name == "ps":
     server.join()
+
   elif FLAGS.job_name == "worker":
 
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-
-    X = tf.placeholder(tf.float32, [None, 784])
-    Y = tf.placeholder(tf.float32, [None, 10])
-
+	
     # Assigns ops to the local worker by default.
     with tf.device(tf.train.replica_device_setter(worker_device="/job:worker/task:%d" % FLAGS.task_index, cluster=cluster)):
 	
