@@ -1,6 +1,9 @@
 !.gitignore
 *.pdb
 .vs
+*.VC.*
 obj/
 bin/
+ipch/
+Debug/
 !/bin/
