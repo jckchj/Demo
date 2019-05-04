@@ -106,7 +106,8 @@ namespace dexp {
 			for (int i = 0; i < _nodes_count; i++) {
 				float* weights = new float[_inputs_count];
 				for (int j = 0; j < _inputs_count; j++) {
-					weights[j] = 0.0f;
+					weights[j] = (rand() % 100) / 100.0f;
+					weights[j] *= ((rand() % 2) == 1) ? 1 : -1;
 				}
 				_weightss.push_back(weights);
 			}
@@ -140,17 +141,19 @@ namespace dexp {
 	class DNN {
 
 	private:
-		int _input_numbers, _output_number, _epoch = 100;
-		float _learning_rate = 0.003f;
+		int _input_numbers, _output_number, _epoch = 8;
+		float _learning_rate = 0.08f;
 		std::vector<Layer*> _layers;
 		float _input[10];
 		char* _expect_ones;
 
 
 	public:
-		DNN(int input_numbers, int output_number) {
+		DNN(int input_numbers, int output_number, int epoch, float lr) {
 			_input_numbers = input_numbers;
 			_output_number = output_number;
+			_epoch = epoch;
+			_learning_rate = lr;
 			_expect_ones = new char[_output_number];
 			Layer* layer0 = new Layer(input_numbers, 20);
 			Layer* layer1 = new Layer(20, 20);
@@ -205,9 +208,6 @@ namespace dexp {
 				for (int q = 0; q < layer->_nodes_count; q++) {
 					for (int r = 0; r < layer->_inputs_count; r++) {
 						layer->_weightss[q][r] += this->_learning_rate * layer->_deltas[q] * input[r];
-						if (r == layer->_inputs_count) {
-							layer->_weightss[q][r] += this->_learning_rate * layer->_deltas[q];
-						}
 					}
 				}
 
@@ -228,6 +228,10 @@ namespace dexp {
 		float test(int valid_set[][11], int set_size = 0, bool is_test = false) {
 			float* labels_probs = new float[_output_number];
 			int rc = 0;
+			std::vector<float> poss_true_set;
+			std::vector<float> neg_true_set;
+			size_t MAX_AUC_SAMPLE_LIMIT1 = 5;
+			
 			for (int i = 0; i < set_size; i++) {
 				int* data = valid_set[i];
 
@@ -238,14 +242,37 @@ namespace dexp {
 				float* dnn_output = feed_forward(_input, 10);
 				softmax(labels_probs, dnn_output, _output_number);
 
+				bool ret = arg_max(labels_probs, _output_number) == data[10];
 				if (is_test) {
-					//std::cout << "Predict=[" << labels_probs[0] << "," << labels_probs[1] << "], Expect=" << data[10] << std::endl;
+					std::cout << "Predict=[" << labels_probs[0] << "," << labels_probs[1] << "], Expect=" << data[10] << ",Result=" << ret << std::endl;
+
+					if (data[10] == 1 && poss_true_set.size() < MAX_AUC_SAMPLE_LIMIT1 && rand() % 2 == 0)
+					{
+						poss_true_set.push_back(ret ? labels_probs[1] - 0.5f : 0.0f);
+					}
+					if (data[10] == 0 && neg_true_set.size() < MAX_AUC_SAMPLE_LIMIT1 && rand() % 2 == 0)
+					{
+						neg_true_set.push_back(!ret ? labels_probs[1] - 0.5f : 0.0f);
+					}
 				}
 
-				if (arg_max(labels_probs, _output_number) == data[10]) {
+				if (ret) {
 					rc++;
 				}
 			}
+
+			if (is_test && poss_true_set.size() > 0 && neg_true_set.size() > 0) {
+				int auc_hit_count = 0;
+				for (size_t i = 0; i < poss_true_set.size(); i++) {
+					for (size_t j = 0; j < neg_true_set.size(); j++) {
+						if (poss_true_set[i] > neg_true_set[j]) {
+							auc_hit_count++;
+						}
+					}
+				}
+				std::cout << "AUC=" << auc_hit_count * 1.0f / (poss_true_set.size() * neg_true_set.size()) << std::endl;
+			}
+
 			delete labels_probs;
 			return rc * 1.0f / set_size;
 		}
@@ -266,7 +293,7 @@ namespace dexp {
 				//std::cout << "Croos entropy" << loss << std::endl;
 			}
 			if (valid_set != NULL) {
-				//std::cout << "Validation accuracy:" << test(valid_set, valid_counts, false) << std::endl;
+				std::cout << "Validation accuracy:" << test(valid_set, valid_counts, false) << std::endl;
 			}
 			delete labels_probs;
 		}
@@ -283,13 +310,7 @@ void init(int matrix[][11], int count) {
 		for (int j = 0; j < 10; j++) {
 			sum += matrix[i][j] = rand() % 10;
 		}
-		if (sum >= 75) {
-			matrix[i][10] = 3;
-		}
-		else if (sum >= 50) {
-			matrix[i][10] = 2;
-		}
-		else if (sum >= 25) {
+		if (sum >= 50) {
 			matrix[i][10] = 1;
 		}
 		else {
@@ -298,7 +319,7 @@ void init(int matrix[][11], int count) {
 	}
 }
 
-int main()
+int main(int argc, char* argv[])
 {
 	srand((unsigned int)time(0));
 
@@ -306,9 +327,14 @@ int main()
 	init(VALID_SET, valid_counts);
 	init(TEST_SET, test_counts);
 
-	dexp::DNN dnn(10, 4);
+	if (argc < 3) {
+		std::cout << "TinyDNN epoch_size learning_rate" << std::endl;
+		exit(-1);
+	}
 
-	dnn.output();
+	dexp::DNN dnn(10, 2, atoi(argv[1]), (float)atof(argv[2]));
+
+	//dnn.output();
 
 	for (int i = 0; i < traint_counts; i++) {
 		dnn.train(TRAINT_SET[i], VALID_SET, valid_counts);
